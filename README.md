@@ -2,7 +2,10 @@
 
 # How to run a Flask service using waitress and NSSM
 
+### Waiters
 - Install waitress: ```pip install waitress```
+
+### NSSM - the Non-Sucking Service Manager
 - Downlaod NSSM from: https://nssm.cc/download
 - Extract it to ```C:\nssm```
 - Open CMD as administrator
