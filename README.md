@@ -1,6 +1,11 @@
 
 
-# How to run a Flask service using waitress and NSSM
+# How to run a Flask service using waitress, NSSM and ngrok
+
+### ngrok
+- Download ngrok: https://dashboard.ngrok.com/get-started/setup/windows
+- Extract to a directory and open Command Prompt as adimistrator
+- run ngrok to get a link. for example: ```ngrok http http://localhost:9090```
 
 ### Waiters
 - Install waitress: ```pip install waitress```
