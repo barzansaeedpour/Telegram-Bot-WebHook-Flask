@@ -53,7 +53,7 @@ def webhook():
 # Health check route
 @app.route("/", methods=["GET"])
 def index():
-    return "Bot is running.1", 200
+    return "Bot is running.2", 200
 
 from waitress import serve
 
