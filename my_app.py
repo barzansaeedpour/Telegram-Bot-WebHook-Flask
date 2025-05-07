@@ -3,6 +3,7 @@ import logging
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import MessageHandler, filters
 from dotenv import load_dotenv
 import asyncio
 
@@ -32,9 +33,51 @@ async def test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"/test from {update.effective_user.username}")
     await update.message.reply_text("Hello! This is a test message.")
 
+import os
+from azure.ai.inference import ChatCompletionsClient
+from azure.ai.inference.models import UserMessage
+from azure.core.credentials import AzureKeyCredential
+# Load model name and token
+AI_TOKEN = os.getenv("GITHUB_TOKEN")
+MODEL_NAME = os.getenv("MODEL_NAME")
+
+# Initialize AI client
+ai_client = ChatCompletionsClient(
+    endpoint="https://models.github.ai/inference",
+    credential=AzureKeyCredential(AI_TOKEN),
+)
+
+from telegram.constants import ChatAction  # Needed for 'typing'
+
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_text = update.message.text
+    logger.info(f"Received from {update.effective_user.username}: {user_text}")
+
+    # Show 'typing...' while processing
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+
+    try:
+        # Send user message to AI
+        response = ai_client.complete(
+            messages=[UserMessage(user_text)],
+            temperature=0.5,
+            top_p=0.95,
+            max_tokens=1500,
+            model=MODEL_NAME,
+        )
+        ai_reply = response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"AI API error: {e}")
+        ai_reply = "Sorry, something went wrong with the AI."
+
+    await update.message.reply_text(ai_reply)
+
+
+
 # Add handlers to bot_app
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(CommandHandler("test", test))
+bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
 # Ensure bot is initialized only once
 bot_initialized = False
