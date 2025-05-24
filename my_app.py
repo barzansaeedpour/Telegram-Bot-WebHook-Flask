@@ -40,13 +40,159 @@ async def handle_menu_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.edit_message_text("You selected Option 2. Number: 11")
 
 
-# Define command handlers
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # await update.message.reply_text(
-    # "Old keyboard removed. Choose a new option:",
-    # reply_markup=ReplyKeyboardRemove()
-    # )
+# # Define command handlers
+# async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     # await update.message.reply_text(
+#     # "Old keyboard removed. Choose a new option:",
+#     # reply_markup=ReplyKeyboardRemove()
+#     # )
 
+#     keyboard = [
+#         [InlineKeyboardButton("Option 1", callback_data='option_1')],
+#         [InlineKeyboardButton("Option 2", callback_data='option_2')]
+#     ]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
+
+from db import SessionLocal, TelegramUser
+
+# async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     telegram_id = str(update.effective_user.id)
+#     # print("***********")
+#     # print(f"Received /start command from user: {telegram_id}")
+#     # print("***********")
+#     # DB session
+#     db = SessionLocal()
+#     user = db.query(TelegramUser).filter_by(telegram_user_id=telegram_id).first()
+
+#     if user:
+#         # Authorized user
+#         await update.message.reply_text("✅ You are authorized.")
+        
+#         # Show menu
+#         keyboard = [
+#             [InlineKeyboardButton("Option 1", callback_data='option_1')],
+#             [InlineKeyboardButton("Option 2", callback_data='option_2')]
+#         ]
+#         reply_markup = InlineKeyboardMarkup(keyboard)
+#         await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
+#     else:
+#         # Unauthorized user
+#         await update.message.reply_text("❌ You are not authorized to use this bot.")
+    
+#     db.close()
+
+import pyodbc
+
+# def get_categories_for_sazman(sazman_id):
+#     try:
+#         conn = pyodbc.connect(
+#             'DRIVER={ODBC Driver 17 for SQL Server};'
+#             'SERVER=your_sql_server_host,1433;'
+#             'DATABASE=your_database_name;'
+#             'UID=your_username;'
+#             'PWD=your_password'
+#         )
+#         cursor = conn.cursor()
+
+#         query = f"SELECT * FROM category WHERE sazmanid = ? ORDER BY [order]"
+#         cursor.execute(query, sazman_id)
+#         rows = cursor.fetchall()
+
+#         # Optional: parse rows into a list of dicts
+#         columns = [column[0] for column in cursor.description]
+#         results = [dict(zip(columns, row)) for row in rows]
+
+#         cursor.close()
+#         conn.close()
+
+#         return results
+#     except Exception as e:
+#         print(f"❌ SQL Server error: {e}")
+#         return None
+
+
+# async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     telegram_id = str(update.effective_user.id)
+#     print("***********")
+#     print(f"Received /start command from user: {telegram_id}")
+#     print("***********")
+#     # DB session
+#     db = SessionLocal()
+#     user = db.query(TelegramUser).filter_by(telegram_user_id=telegram_id).first()
+
+#     if user:
+#         # Authorized user
+#         await update.message.reply_text("✅ You are authorized.")
+        
+#         # Show menu
+#         keyboard = [
+#             [InlineKeyboardButton("Option 1", callback_data='option_1')],
+#             [InlineKeyboardButton("Option 2", callback_data='option_2')]
+#         ]
+#         reply_markup = InlineKeyboardMarkup(keyboard)
+#         await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
+#     else:
+#         # Unauthorized user
+#         await update.message.reply_text("❌ You are not authorized to use this bot.")
+    
+#     db.close()
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import ContextTypes
+from sqlalchemy.orm import Session
+from db import SessionLocal, TelegramUser
+from db_mssql import get_sqlserver_connection  # From earlier step
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+# 1. Check if Telegram user is authorized
+def is_user_authorized(telegram_id: str) -> int | None:
+    db: Session = SessionLocal()
+    try:
+        user = db.query(TelegramUser).filter_by(telegram_user_id=telegram_id).first()
+        return user.sazman_id if user else None
+    finally:
+        db.close()
+
+
+# 2. Query categories from SQL Server
+def get_categories_by_sazman_id(sazman_id: int):
+    try:
+        conn = get_sqlserver_connection()
+        # print(f" ---- Connected to SQL Server for Sazman ID: {sazman_id}")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM category WHERE sazmanid = ? ORDER BY [order]", sazman_id)
+        temp = cursor.fetchall()
+        return temp
+    except Exception as e:
+        logger.error(f"SQL Server error: {e}")
+        return None
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+def build_category_response(rows):
+    if not rows:
+        return "ℹ️ No categories found for this Sazman ID.", None
+
+    # Each category becomes a button
+    keyboard = [
+        [InlineKeyboardButton(text=row.Name, callback_data=f"category_{row.Id}")]
+        for row in rows
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    return "📂 Please select a category:", reply_markup
+
+
+# 4. Send main keyboard (option 1 / 2)
+async def send_main_keyboard(update: Update):
     keyboard = [
         [InlineKeyboardButton("Option 1", callback_data='option_1')],
         [InlineKeyboardButton("Option 2", callback_data='option_2')]
@@ -54,6 +200,100 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
 
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    telegram_id = str(update.effective_user.id)
+    sazman_id = is_user_authorized(telegram_id)
+
+    if sazman_id:
+        await update.message.reply_text(f"✅ You are authorized. Sazman ID: {sazman_id}")
+
+        rows = get_categories_by_sazman_id(sazman_id)
+
+        if rows is not None:
+            text, reply_markup = build_category_response(rows)
+            await update.message.reply_text(text, reply_markup=reply_markup)
+        else:
+            await update.message.reply_text("❌ Failed to fetch categories from SQL Server.")
+    else:
+        await update.message.reply_text("❌ You are not authorized to use this bot.")
+ 
+from telegram.ext import CallbackQueryHandler
+
+# def get_pages_by_category_id(category_id):
+#     print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
+#     try:
+#         conn = get_sqlserver_connection()
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT * FROM [DashboardbManager].[dbo].[Page] where CategoryId = ?", category_id)
+#         # cursor.execute("SELECT Id, Title FROM dbo.Page WHERE CategoryId = ?", category_id)
+#         rows = cursor.fetchall()
+#         return rows
+#     except Exception as e:
+#         print("❌ SQL Error:", e)
+#         return []
+def get_pages_by_category_id(category_id: int):
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
+    try:
+        conn = get_sqlserver_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT Id, Title FROM Page WHERE CategoryId = ?", category_id)
+        return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"SQL Server error while fetching pages: {e}")
+        return None
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+
+def build_page_response(rows):
+    if not rows:
+        return "ℹ️ No pages found for this category.", None
+
+    keyboard = [
+        [InlineKeyboardButton(text=row.Title, callback_data=f"page_{row.Id}")]
+        for row in rows
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    return "📄 Please select a page:", reply_markup
+
+async def handle_category_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("✅ handle_category_click triggered!")  # Debug print
+    query = update.callback_query
+    await query.answer()
+
+    category_id = int(query.data.split("_")[1])
+    print(f"➡️ Category ID: {category_id}")
+
+    pages = get_pages_by_category_id(category_id)
+    print(f"Fetched {len(pages)} pages") if pages else print("No pages found")
+
+    text, reply_markup = build_page_response(pages)
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
+
+
+# async def handle_category_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     print("************** handle_category_click ******************")
+#     query = update.callback_query
+#     await query.answer()
+
+#     # Step 1: Extract Category ID from callback_data
+#     callback_data = query.data  # e.g., 'category_4'
+#     category_id = int(callback_data.split("_")[1])
+
+#     # Step 2: Query database for pages under this category
+#     pages = get_pages_by_category_id(category_id)
+
+#     # Step 3: Format response
+#     if pages:
+#         text = "📄 Pages in this category:\n" + "\n".join(f"- {page.Title}" for page in pages)
+#     else:
+#         text = "ℹ️ No pages found for this category."
+
+#     # Step 4: Respond in the chat (you can use edit or send a new message)
+#     await query.edit_message_text(text)
 
 # async def test(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #     logger.info(f"/test from {update.effective_user.username}")
@@ -152,9 +392,23 @@ import logging
 #         await update.message.reply_text("An error occurred while processing the file.")
 
 # Add handlers to bot_app
+# bot_app.add_handler(CommandHandler("start", start))
+# bot_app.add_handler(CommandHandler('start', start))
+# bot_app.add_handler(CallbackQueryHandler(handle_menu_choice))
+# bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
+from telegram.ext import CallbackQueryHandler
+
+# bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
+
 bot_app.add_handler(CommandHandler("start", start))
-bot_app.add_handler(CommandHandler('start', start))
-bot_app.add_handler(CallbackQueryHandler(handle_menu_choice))
+bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
+async def debug_all_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    print("Callback data received:", query.data)
+    await query.answer("debug")
+
+bot_app.add_handler(CallbackQueryHandler(debug_all_callbacks))  # Add this temporarily to catch all callback data
+
 
 # bot_app.add_handler(CommandHandler("test", test))
 # bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
@@ -169,7 +423,7 @@ loop = asyncio.get_event_loop()
 @app.route(f"/webhook/{TOKEN}", methods=["POST"])
 def webhook():
     update_data = request.get_json(force=True)
-    logger.info(f"Received update: {update_data}")
+    # logger.info(f"Received update: {update_data}")
     update = Update.de_json(update_data, bot_app.bot)
     loop.run_until_complete(bot_app.process_update(update))
     return "OK", 200
