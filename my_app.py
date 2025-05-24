@@ -216,7 +216,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("❌ Failed to fetch categories from SQL Server.")
     else:
-        await update.message.reply_text("❌ You are not authorized to use this bot.")
+        await update.message.reply_text(
+            f"❌ شما اجازه دسترسی به این ربات را ندارید. لطفاً با مدیر تماس بگیرید.\n\n"
+            f"آیدی تلگرام جهت تعریف: <code>{telegram_id}</code>",
+            parse_mode='HTML'
+        )
+
+
+
+
  
 from telegram.ext import CallbackQueryHandler
 
