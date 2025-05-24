@@ -15,7 +15,7 @@
 - Downlaod NSSM from: https://nssm.cc/download
 - Extract it to ```C:\nssm```
 - Run CMD as administrator
-    - ```cd C:\nssm```
+    - ```C:\nssm\win64```
     - ```nssm install MyFlaskBot``` (GUI will be opend)
         - Application path: Path to python.exe
             - For example: ```E:\FlaskApplication\Flask_Demo\env\Scripts\python.exe```
@@ -27,7 +27,10 @@
     - nssm install MyFlaskBot
     - nssm restart MyFlaskBot
 
+    To stop a service:
+        - nssm stop MyFlaskBot
+
 ### To get a list of running services using nssm:
-    - run powershell:
+    - run powershell as administrator:
         - ```Get-WmiObject Win32_Service | Where-Object { $_.PathName -match "nssm.exe" } | Select-Object Name, DisplayName, State, StartMode, PathName
         ```
