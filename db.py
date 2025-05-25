@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite:///telegram.db"  # You can use PostgreSQL, MySQL, etc.
+DATABASE_URL = "sqlite:///telegram.db"
 
 Base = declarative_base()
 
@@ -13,6 +13,20 @@ class TelegramUser(Base):
     telegram_user_id = Column(String, unique=True)
     sazman_id = Column(String, unique=True)  # or Integer, depending on your app
 
+class DashboardPageConnection(Base):
+    __tablename__ = 'dashboard_page_connection'
+    id = Column(Integer, primary_key=True)
+    query_title = Column(String, nullable=False)
+    page_id = Column(String, nullable=False)
+    connection_string = Column(String, nullable=False)
+    query = Column(String, nullable=False)
+
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
-Base.metadata.create_all(bind=engine)
+
+# Create all tables
+# from db import Base, engine
+
+Base.metadata.drop_all(bind=engine)   # DANGER: deletes all tables and data
+Base.metadata.create_all(bind=engine) # Recreate all tables with updated schema
+

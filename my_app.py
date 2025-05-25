@@ -173,6 +173,26 @@ def get_categories_by_sazman_id(sazman_id: int):
     finally:
         if 'conn' in locals():
             conn.close()
+            
+# 2. Query categories from SQL Server
+def get_sazman_title_from_sazman_id(sazman_id: int):
+    try:
+        conn = get_sqlserver_connection()
+        # print(f" ---- Connected to SQL Server for Sazman ID: {sazman_id}")
+        cursor = conn.cursor()
+        cursor.execute("SELECT Tittle FROM [DashboardbManager].[dbo].[Sazman] WHERE id=?", sazman_id)
+        temp = cursor.fetchall()
+        if temp:
+            return temp[0][0]
+        else:
+            logger.warning(f"No Sazman found with ID: {sazman_id}")
+            return 'یافت نشد'
+    except Exception as e:
+        logger.error(f"SQL Server error: {e}")
+        return None
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -188,7 +208,7 @@ def build_category_response(rows):
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    return "📂 Please select a category:", reply_markup
+    return "📂 لطفا یک دسته بندی را انتخاب کنید:", reply_markup
 
 
 # 4. Send main keyboard (option 1 / 2)
@@ -206,7 +226,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     sazman_id = is_user_authorized(telegram_id)
 
     if sazman_id:
-        await update.message.reply_text(f"✅ You are authorized. Sazman ID: {sazman_id}")
+        # get sazman title from SQL Server
+        sazman_title = get_sazman_title_from_sazman_id(sazman_id)
+        await update.message.reply_text(f"✅ دسترسی شما تایید شد. سازمان شما: {sazman_title}")
 
         rows = get_categories_by_sazman_id(sazman_id)
 
@@ -214,7 +236,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text, reply_markup = build_category_response(rows)
             await update.message.reply_text(text, reply_markup=reply_markup)
         else:
-            await update.message.reply_text("❌ Failed to fetch categories from SQL Server.")
+            await update.message.reply_text("❌ خطا در گرفتن دسته بندی ها از دیتابیس.")
     else:
         await update.message.reply_text(
             f"❌ شما اجازه دسترسی به این ربات را ندارید. لطفاً با مدیر تماس بگیرید.\n\n"
@@ -265,7 +287,7 @@ def build_page_response(rows):
         for row in rows
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    return "📄 Please select a page:", reply_markup
+    return "📄 لطفا یک صفحه را انتخاب کنید:", reply_markup
 
 async def handle_category_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("✅ handle_category_click triggered!")  # Debug print
@@ -403,13 +425,17 @@ import logging
 # bot_app.add_handler(CommandHandler("start", start))
 # bot_app.add_handler(CommandHandler('start', start))
 # bot_app.add_handler(CallbackQueryHandler(handle_menu_choice))
-# bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
+
 from telegram.ext import CallbackQueryHandler
 
-# bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
+
 
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
+
+
+
+
 async def debug_all_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     print("Callback data received:", query.data)
