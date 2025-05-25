@@ -210,15 +210,21 @@ def build_category_response(rows):
     reply_markup = InlineKeyboardMarkup(keyboard)
     return "📂 لطفا یک دسته بندی را انتخاب کنید:", reply_markup
 
+def build_query_response(result_text: str):
+    if not result_text:
+        result_text = "❌ No results available for this page."
+    
+    return result_text, None
 
-# 4. Send main keyboard (option 1 / 2)
-async def send_main_keyboard(update: Update):
-    keyboard = [
-        [InlineKeyboardButton("Option 1", callback_data='option_1')],
-        [InlineKeyboardButton("Option 2", callback_data='option_2')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
+
+# # 4. Send main keyboard (option 1 / 2)
+# async def send_main_keyboard(update: Update):
+#     keyboard = [
+#         [InlineKeyboardButton("Option 1", callback_data='option_1')],
+#         [InlineKeyboardButton("Option 2", callback_data='option_2')]
+#     ]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -263,7 +269,6 @@ from telegram.ext import CallbackQueryHandler
 #         print("❌ SQL Error:", e)
 #         return []
 def get_pages_by_category_id(category_id: int):
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
     try:
         conn = get_sqlserver_connection()
         cursor = conn.cursor()
@@ -275,6 +280,43 @@ def get_pages_by_category_id(category_id: int):
     finally:
         if 'conn' in locals():
             conn.close()
+
+from db import SessionLocal, DashboardPageConnection   
+         
+def get_query_results_by_page_id(page_id: int):
+    db: Session = SessionLocal()
+    try:
+        records = db.query(DashboardPageConnection).filter_by(page_id=page_id)
+        # return user.sazman_id if user else None
+        temps = []
+        for record in records:
+            if record:
+                connection_string = record.connection_string
+                query_text = record.query
+                query_title = record.query_title
+                print("Connection String:", connection_string)
+                print("Query:", query_text)
+            else:
+                print("No record found with that page_id.")
+            
+            try:
+                conn = get_sqlserver_connection(conn_str=connection_string)
+                cursor = conn.cursor()
+                cursor.execute(query_text)
+                temp = cursor.fetchall()
+                temps.append((query_title, temp))
+                
+            except Exception as e:
+                logger.error(f"SQL Server error while fetching queries: {e}")
+                return None
+            finally:
+                if 'conn' in locals():
+                    conn.close()
+        return temps
+    finally:
+        db.close()
+        
+    
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -301,6 +343,31 @@ async def handle_category_click(update: Update, context: ContextTypes.DEFAULT_TY
     print(f"Fetched {len(pages)} pages") if pages else print("No pages found")
 
     text, reply_markup = build_page_response(pages)
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
+
+async def handle_page_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("✅ handle_page_click triggered!")  # Debug print
+    query = update.callback_query
+    await query.answer()
+
+    page_id = int(query.data.split("_")[1])
+    print(f"➡️ Page ID: {page_id}")
+
+    temps = get_query_results_by_page_id(page_id)
+    
+    # print(f"Fetched {len(queries)} queris") if queries else print("No queries found")
+    resutlt_text = ""
+    for temp in temps:
+        result_text = f"{temp[0]}: {temp[1][0][0]}" if temp[1] else f"{temp[0]}: بدون نتیجه"
+        resutlt_text += result_text + "\n"
+    
+    # if temps:
+    #     resutlt_text = f" {str(queries[0][0])}"
+    # else:
+    #     resutlt_text = None
+        
+    # resutlt_text = 'جمع کل مانده: 54100000 \nجمع کل مانده2: 584600000'
+    text, reply_markup = build_query_response(result_text=resutlt_text)
     await query.edit_message_text(text=text, reply_markup=reply_markup)
 
 
@@ -432,6 +499,7 @@ from telegram.ext import CallbackQueryHandler
 
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
+bot_app.add_handler(CallbackQueryHandler(handle_page_click, pattern=r'^page_\d+$'))
 
 
 

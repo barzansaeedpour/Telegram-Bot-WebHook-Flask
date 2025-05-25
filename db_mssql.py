@@ -10,18 +10,19 @@ DB_NAME = os.getenv("DB_NAME")
 LOGIN = os.getenv("LOGIN")
 PASSWORD = os.getenv("PASSWORD")
 
-def get_sqlserver_connection():
+def get_sqlserver_connection(conn_str=None):
     try:
-        conn_str = (
-            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-            f"SERVER={SERVER_NAME};"
-            f"DATABASE={DB_NAME};"
-            f"UID={LOGIN};"
-            f"PWD={PASSWORD};"
-            "Encrypt=yes;"
-            "TrustServerCertificate=yes;"
-            "Connection Timeout=60;"
-        )
+        if not conn_str:
+            conn_str = (
+                f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+                f"SERVER={SERVER_NAME};"
+                f"DATABASE={DB_NAME};"
+                f"UID={LOGIN};"
+                f"PWD={PASSWORD};"
+                "Encrypt=yes;"
+                "TrustServerCertificate=yes;"
+                "Connection Timeout=60;"
+            )
         conn = pyodbc.connect(conn_str)
         print("✅ Connected to SQL Server.")
         return conn

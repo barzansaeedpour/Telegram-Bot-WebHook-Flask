@@ -27,6 +27,6 @@ SessionLocal = sessionmaker(bind=engine)
 # Create all tables
 # from db import Base, engine
 
-Base.metadata.drop_all(bind=engine)   # DANGER: deletes all tables and data
+# Base.metadata.drop_all(bind=engine)   # DANGER: deletes all tables and data
 Base.metadata.create_all(bind=engine) # Recreate all tables with updated schema
 
