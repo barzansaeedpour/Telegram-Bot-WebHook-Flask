@@ -335,6 +335,7 @@ async def handle_category_click(update: Update, context: ContextTypes.DEFAULT_TY
     print("✅ handle_category_click triggered!")  # Debug print
     query = update.callback_query
     await query.answer()
+    await query.edit_message_text(text="⏳ لطفا صبر کنید...")
 
     category_id = int(query.data.split("_")[1])
     print(f"➡️ Category ID: {category_id}")
@@ -349,7 +350,8 @@ async def handle_page_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("✅ handle_page_click triggered!")  # Debug print
     query = update.callback_query
     await query.answer()
-
+    await query.edit_message_text(text="⏳ لطفا صبر کنید...")
+    
     page_id = int(query.data.split("_")[1])
     print(f"➡️ Page ID: {page_id}")
 
@@ -359,7 +361,7 @@ async def handle_page_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     resutlt_text = ""
     for temp in temps:
         result_text = f"{temp[0]}: {temp[1][0][0]}" if temp[1] else f"{temp[0]}: بدون نتیجه"
-        resutlt_text += result_text + "\n"
+        resutlt_text += result_text + "\n\n"
     
     # if temps:
     #     resutlt_text = f" {str(queries[0][0])}"
