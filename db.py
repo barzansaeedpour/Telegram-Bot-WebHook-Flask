@@ -21,6 +21,17 @@ class DashboardPageConnection(Base):
     connection_string = Column(String, nullable=False)
     query = Column(String, nullable=False)
 
+# In db.py
+class AdminUser(Base):
+    __tablename__ = 'admin_user'
+    id = Column(Integer, primary_key=True)
+    phone = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False)  # Store hashed passwords in production
+
+
+
+
+
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 

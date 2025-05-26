@@ -9,10 +9,46 @@ import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from telegram import ReplyKeyboardRemove
-
+from db import SessionLocal, TelegramUser
+import pyodbc
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import ContextTypes
+from sqlalchemy.orm import Session
+from db import SessionLocal, TelegramUser
+from db_mssql import get_sqlserver_connection  # From earlier step
+import logging
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackQueryHandler
+from db import SessionLocal, DashboardPageConnection   
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from azure.ai.inference import ChatCompletionsClient
+from azure.ai.inference.models import UserMessage
+from azure.core.credentials import AzureKeyCredential
+from telegram.constants import ChatAction  # Needed for 'typing'
+from telegram import Update
+from telegram.ext import MessageHandler, filters, ContextTypes
+from telegram.constants import ChatAction
+import pandas as pd
+import io
+import logging
+from telegram.ext import CallbackQueryHandler
+from waitress import serve
 
 # Load environment variables
 load_dotenv()
+
+# Load model name and token
+AI_TOKEN = os.getenv("GITHUB_TOKEN")
+MODEL_NAME = os.getenv("MODEL_NAME")
+
+# Initialize AI client
+ai_client = ChatCompletionsClient(
+    endpoint="https://models.github.ai/inference",
+    credential=AzureKeyCredential(AI_TOKEN),
+)
+
+logger = logging.getLogger(__name__)
+
 TOKEN = os.getenv("TOKEN")
 
 # Logging setup
@@ -24,6 +60,7 @@ logger = logging.getLogger(__name__)
 
 # Flask app
 app = Flask(__name__)
+app.secret_key = "your_secret_key"  # Use environment variables in production
 
 # Telegram bot app
 bot_app = Application.builder().token(TOKEN).build()
@@ -38,115 +75,6 @@ async def handle_menu_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.edit_message_text("You selected Option 1. Number: 10")
     elif query.data == 'option_2':
         await query.edit_message_text("You selected Option 2. Number: 11")
-
-
-# # Define command handlers
-# async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     # await update.message.reply_text(
-#     # "Old keyboard removed. Choose a new option:",
-#     # reply_markup=ReplyKeyboardRemove()
-#     # )
-
-#     keyboard = [
-#         [InlineKeyboardButton("Option 1", callback_data='option_1')],
-#         [InlineKeyboardButton("Option 2", callback_data='option_2')]
-#     ]
-#     reply_markup = InlineKeyboardMarkup(keyboard)
-#     await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
-
-from db import SessionLocal, TelegramUser
-
-# async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     telegram_id = str(update.effective_user.id)
-#     # print("***********")
-#     # print(f"Received /start command from user: {telegram_id}")
-#     # print("***********")
-#     # DB session
-#     db = SessionLocal()
-#     user = db.query(TelegramUser).filter_by(telegram_user_id=telegram_id).first()
-
-#     if user:
-#         # Authorized user
-#         await update.message.reply_text("✅ You are authorized.")
-        
-#         # Show menu
-#         keyboard = [
-#             [InlineKeyboardButton("Option 1", callback_data='option_1')],
-#             [InlineKeyboardButton("Option 2", callback_data='option_2')]
-#         ]
-#         reply_markup = InlineKeyboardMarkup(keyboard)
-#         await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
-#     else:
-#         # Unauthorized user
-#         await update.message.reply_text("❌ You are not authorized to use this bot.")
-    
-#     db.close()
-
-import pyodbc
-
-# def get_categories_for_sazman(sazman_id):
-#     try:
-#         conn = pyodbc.connect(
-#             'DRIVER={ODBC Driver 17 for SQL Server};'
-#             'SERVER=your_sql_server_host,1433;'
-#             'DATABASE=your_database_name;'
-#             'UID=your_username;'
-#             'PWD=your_password'
-#         )
-#         cursor = conn.cursor()
-
-#         query = f"SELECT * FROM category WHERE sazmanid = ? ORDER BY [order]"
-#         cursor.execute(query, sazman_id)
-#         rows = cursor.fetchall()
-
-#         # Optional: parse rows into a list of dicts
-#         columns = [column[0] for column in cursor.description]
-#         results = [dict(zip(columns, row)) for row in rows]
-
-#         cursor.close()
-#         conn.close()
-
-#         return results
-#     except Exception as e:
-#         print(f"❌ SQL Server error: {e}")
-#         return None
-
-
-# async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     telegram_id = str(update.effective_user.id)
-#     print("***********")
-#     print(f"Received /start command from user: {telegram_id}")
-#     print("***********")
-#     # DB session
-#     db = SessionLocal()
-#     user = db.query(TelegramUser).filter_by(telegram_user_id=telegram_id).first()
-
-#     if user:
-#         # Authorized user
-#         await update.message.reply_text("✅ You are authorized.")
-        
-#         # Show menu
-#         keyboard = [
-#             [InlineKeyboardButton("Option 1", callback_data='option_1')],
-#             [InlineKeyboardButton("Option 2", callback_data='option_2')]
-#         ]
-#         reply_markup = InlineKeyboardMarkup(keyboard)
-#         await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
-#     else:
-#         # Unauthorized user
-#         await update.message.reply_text("❌ You are not authorized to use this bot.")
-    
-#     db.close()
-
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ContextTypes
-from sqlalchemy.orm import Session
-from db import SessionLocal, TelegramUser
-from db_mssql import get_sqlserver_connection  # From earlier step
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 # 1. Check if Telegram user is authorized
 def is_user_authorized(telegram_id: str) -> int | None:
@@ -195,8 +123,6 @@ def get_sazman_title_from_sazman_id(sazman_id: int):
             conn.close()
 
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
 def build_category_response(rows):
     if not rows:
         return "ℹ️ No categories found for this Sazman ID.", None
@@ -216,16 +142,6 @@ def build_query_response(result_text: str):
         result_text = "❌ No results available for this page."
     keyboard = [[InlineKeyboardButton(text="🔙 بازگشت", callback_data="back_to_pages")]]
     return result_text, InlineKeyboardMarkup(keyboard)
-
-
-# # 4. Send main keyboard (option 1 / 2)
-# async def send_main_keyboard(update: Update):
-#     keyboard = [
-#         [InlineKeyboardButton("Option 1", callback_data='option_1')],
-#         [InlineKeyboardButton("Option 2", callback_data='option_2')]
-#     ]
-#     reply_markup = InlineKeyboardMarkup(keyboard)
-#     await update.message.reply_text("Choose an option:", reply_markup=reply_markup)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -258,23 +174,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-
-
- 
-from telegram.ext import CallbackQueryHandler
-
-# def get_pages_by_category_id(category_id):
-#     print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
-#     try:
-#         conn = get_sqlserver_connection()
-#         cursor = conn.cursor()
-#         cursor.execute("SELECT * FROM [DashboardbManager].[dbo].[Page] where CategoryId = ?", category_id)
-#         # cursor.execute("SELECT Id, Title FROM dbo.Page WHERE CategoryId = ?", category_id)
-#         rows = cursor.fetchall()
-#         return rows
-#     except Exception as e:
-#         print("❌ SQL Error:", e)
-#         return []
 def get_pages_by_category_id(category_id: int):
     try:
         conn = get_sqlserver_connection()
@@ -287,9 +186,7 @@ def get_pages_by_category_id(category_id: int):
     finally:
         if 'conn' in locals():
             conn.close()
-
-from db import SessionLocal, DashboardPageConnection   
-         
+  
 def get_query_results_by_page_id(page_id: int):
     db: Session = SessionLocal()
     try:
@@ -323,9 +220,6 @@ def get_query_results_by_page_id(page_id: int):
     finally:
         db.close()
         
-    
-
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 def build_page_response(rows):
     if not rows:
@@ -386,31 +280,6 @@ async def handle_page_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.edit_message_text(text=text, reply_markup=reply_markup)
 
 
-# async def handle_category_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     print("************** handle_category_click ******************")
-#     query = update.callback_query
-#     await query.answer()
-
-#     # Step 1: Extract Category ID from callback_data
-#     callback_data = query.data  # e.g., 'category_4'
-#     category_id = int(callback_data.split("_")[1])
-
-#     # Step 2: Query database for pages under this category
-#     pages = get_pages_by_category_id(category_id)
-
-#     # Step 3: Format response
-#     if pages:
-#         text = "📄 Pages in this category:\n" + "\n".join(f"- {page.Title}" for page in pages)
-#     else:
-#         text = "ℹ️ No pages found for this category."
-
-#     # Step 4: Respond in the chat (you can use edit or send a new message)
-#     await query.edit_message_text(text)
-
-# async def test(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     logger.info(f"/test from {update.effective_user.username}")
-#     await update.message.reply_text("Hello! This is a test message.")
-
 
 async def handle_back_to_categories(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -444,104 +313,6 @@ async def handle_back_to_start(update: Update, context: ContextTypes.DEFAULT_TYP
     await start(update, context)  # Reuse start logic
 
 
-import os
-from azure.ai.inference import ChatCompletionsClient
-from azure.ai.inference.models import UserMessage
-from azure.core.credentials import AzureKeyCredential
-# Load model name and token
-AI_TOKEN = os.getenv("GITHUB_TOKEN")
-MODEL_NAME = os.getenv("MODEL_NAME")
-
-# Initialize AI client
-ai_client = ChatCompletionsClient(
-    endpoint="https://models.github.ai/inference",
-    credential=AzureKeyCredential(AI_TOKEN),
-)
-
-from telegram.constants import ChatAction  # Needed for 'typing'
-
-# async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     user_text = update.message.text
-#     logger.info(f"Received from {update.effective_user.username}: {user_text}")
-
-#     # Show 'typing...' while processing
-#     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
-
-#     try:
-#         # Send user message to AI
-#         response = ai_client.complete(
-#             messages=[UserMessage(user_text)],
-#             temperature=0.5,
-#             top_p=0.95,
-#             max_tokens=1500,
-#             model=MODEL_NAME,
-#         )
-#         ai_reply = response.choices[0].message.content
-#     except Exception as e:
-#         logger.error(f"AI API error: {e}")
-#         ai_reply = "Sorry, something went wrong with the AI."
-
-#     await update.message.reply_text(ai_reply)
-
-
-from telegram import Update
-from telegram.ext import MessageHandler, filters, ContextTypes
-from telegram.constants import ChatAction
-import pandas as pd
-import io
-import logging
-
-# Assuming ai_client and MODEL_NAME are already defined and initialized
-
-# async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     document = update.message.document
-#     file_name = document.file_name
-#     mime_type = document.mime_type
-#     logger.info(f"Received document: {file_name} with MIME type: {mime_type}")
-
-#     # Indicate bot is processing
-#     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
-
-#     try:
-#         # Download the file
-#         file = await context.bot.get_file(document.file_id)
-#         file_bytes = await file.download_as_bytearray()
-
-#         # Read the file into a DataFrame
-#         if mime_type == 'text/csv' or file_name.endswith('.csv'):
-#             df = pd.read_csv(io.BytesIO(file_bytes))
-#         elif mime_type in ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'] or file_name.endswith(('.xls', '.xlsx')):
-#             df = pd.read_excel(io.BytesIO(file_bytes))
-#         else:
-#             await update.message.reply_text("Unsupported file type. Please upload a CSV or Excel file.")
-#             return
-
-#         # Convert DataFrame to string
-#         data_str = df.to_string()
-
-#         # Send data to AI for explanation
-#         response = ai_client.complete(
-#             messages=[UserMessage(f"Explain this data:\n{data_str}")],
-#             temperature=0.5,
-#             top_p=0.95,
-#             max_tokens=1500,
-#             model=MODEL_NAME,
-#         )
-#         ai_reply = response.choices[0].message.content
-
-#         # Send AI response back to user
-#         await update.message.reply_text(ai_reply)
-
-#     except Exception as e:
-#         logger.error(f"Error processing document: {e}")
-#         await update.message.reply_text("An error occurred while processing the file.")
-
-# Add handlers to bot_app
-# bot_app.add_handler(CommandHandler("start", start))
-# bot_app.add_handler(CommandHandler('start', start))
-# bot_app.add_handler(CallbackQueryHandler(handle_menu_choice))
-
-from telegram.ext import CallbackQueryHandler
 
 
 
@@ -560,11 +331,6 @@ async def debug_all_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer("debug")
 
 bot_app.add_handler(CallbackQueryHandler(debug_all_callbacks))  # Add this temporarily to catch all callback data
-
-
-# bot_app.add_handler(CommandHandler("test", test))
-# bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-# bot_app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
 
 
 # Ensure bot is initialized only once
@@ -586,7 +352,65 @@ def webhook():
 def index():
     return "Bot is running.2", 200
 
-from waitress import serve
+
+####################################### Logging setup #######################################
+from flask import Flask, render_template, request, redirect, session, url_for
+from db import SessionLocal, TelegramUser, DashboardPageConnection, AdminUser
+from sqlalchemy.orm.exc import NoResultFound
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        phone = request.form['phone']
+        password = request.form['password']
+        db = SessionLocal()
+        try:
+            user = db.query(AdminUser).filter_by(phone=phone, password=password).one()
+            session['admin'] = user.phone
+            return redirect('/dashboard')
+        except NoResultFound:
+            return render_template('login.html', error="Invalid credentials")
+    return render_template('login.html')
+
+@app.route('/dashboard')
+def dashboard():
+    if 'admin' not in session:
+        return redirect('/')
+    return render_template('dashboard.html')
+
+@app.route('/add-telegram-user', methods=['GET', 'POST'])
+def add_telegram_user():
+    if 'admin' not in session:
+        return redirect('/')
+    if request.method == 'POST':
+        telegram_user_id = request.form['telegram_user_id']
+        sazman_id = request.form['sazman_id']
+        db = SessionLocal()
+        db.add(TelegramUser(telegram_user_id=telegram_user_id, sazman_id=sazman_id))
+        db.commit()
+        return redirect('/dashboard')
+    return render_template('add_telegram_user.html')
+
+@app.route('/add-page-connection', methods=['GET', 'POST'])
+def add_page_connection():
+    if 'admin' not in session:
+        return redirect('/')
+    if request.method == 'POST':
+        db = SessionLocal()
+        db.add(DashboardPageConnection(
+            query_title=request.form['query_title'],
+            page_id=request.form['page_id'],
+            connection_string=request.form['connection_string'],
+            query=request.form['query']
+        ))
+        db.commit()
+        return redirect('/dashboard')
+    return render_template('add_page_connection.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('admin', None)
+    return redirect('/')
 
 if __name__ == "__main__":
     
