@@ -396,6 +396,45 @@ def add_telegram_user():
         return redirect('/dashboard')
     return render_template('add_telegram_user.html')
 
+@app.route('/telegram-users')
+def list_telegram_users():
+    if 'admin' not in session:
+        return redirect('/')
+    db = SessionLocal()
+    users = db.query(TelegramUser).all()
+    return render_template('list_telegram_users.html', users=users)
+
+@app.route('/edit-telegram-user/<int:id>', methods=['GET', 'POST'])
+def edit_telegram_user(id):
+    if 'admin' not in session:
+        return redirect('/')
+    db = SessionLocal()
+    user = db.query(TelegramUser).filter(TelegramUser.id == id).first()
+    if not user:
+        return "کاربر یافت نشد", 404
+
+    if request.method == 'POST':
+        user.telegram_user_id = request.form['telegram_user_id']
+        user.sazman_id = request.form['sazman_id']
+        db.commit()
+        return redirect(url_for('list_telegram_users'))
+
+    return render_template('edit_telegram_user.html', user=user)
+
+@app.route('/delete-telegram-user/<int:id>', methods=['GET'])
+def delete_telegram_user(id):
+    if 'admin' not in session:
+        return redirect('/')
+    db = SessionLocal()
+    user = db.query(TelegramUser).filter(TelegramUser.id == id).first()
+    if not user:
+        return "کاربر یافت نشد", 404
+
+    db.delete(user)
+    db.commit()
+    return redirect(url_for('list_telegram_users'))
+
+
 @app.route('/add-page-connection', methods=['GET', 'POST'])
 def add_page_connection():
     if 'admin' not in session:
@@ -411,6 +450,42 @@ def add_page_connection():
         db.commit()
         return redirect('/dashboard')
     return render_template('add_page_connection.html')
+
+@app.route('/page-connections')
+def list_page_connections():
+    if 'admin' not in session:
+        return redirect('/')
+    db = SessionLocal()
+    records = db.query(DashboardPageConnection).all()
+    return render_template('list_page_connections.html', records=records)
+
+@app.route('/delete-page-connection/<int:id>')
+def delete_page_connection(id):
+    if 'admin' not in session:
+        return redirect('/')
+    db = SessionLocal()
+    record = db.query(DashboardPageConnection).get(id)
+    if record:
+        db.delete(record)
+        db.commit()
+    return redirect('/page-connections')
+
+@app.route('/edit-page-connection/<int:id>', methods=['GET', 'POST'])
+def edit_page_connection(id):
+    if 'admin' not in session:
+        return redirect('/')
+    db = SessionLocal()
+    record = db.query(DashboardPageConnection).get(id)
+    if not record:
+        return 'یافت نشد', 404
+    if request.method == 'POST':
+        record.query_title = request.form['query_title']
+        record.page_id = request.form['page_id']
+        record.connection_string = request.form['connection_string']
+        record.query = request.form['query']
+        db.commit()
+        return redirect('/page-connections')
+    return render_template('edit_page_connection.html', record=record)
 
 @app.route('/logout')
 def logout():

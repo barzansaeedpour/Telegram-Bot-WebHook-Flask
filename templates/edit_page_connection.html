@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>ویرایش اتصال صفحه</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css" />
+  <style>
+    body {
+      font-family: 'Samim', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-bottom: 24px;
+      text-align: center;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    input[type="submit"] {
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>ویرایش گزارش (کوئری)</h2>
+    <form method="POST">
+      <label for="query_title">عنوان کوئری:</label>
+      <input type="text" id="query_title" name="query_title" value="{{ record.query_title }}" required>
+
+      <label for="page_id">شناسه صفحه:</label>
+      <input type="text" id="page_id" name="page_id" value="{{ record.page_id }}" required>
+
+      <label for="connection_string">رشته اتصال:</label>
+      <input type="text" id="connection_string" name="connection_string" value="{{ record.connection_string }}" required>
+
+      <label for="query">کوئری:</label>
+      <textarea id="query" name="query" required>{{ record.query }}</textarea>
+
+      <input type="submit" value="ذخیره تغییرات">
+    </form>
+    <a class="back-link" href="{{ url_for('list_page_connections') }}">بازگشت</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>لیست کاربران تلگرام</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css" />
+  <style>
+    body {
+      font-family: 'Samim', sans-serif;
+      direction: rtl;
+      padding: 30px;
+      background: #f0f8ff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .add-button {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+    .add-button:hover {
+      background-color: #0056b3;
+    }
+    .header-row {
+        display: flex;
+        justify-content: space-between; /* puts items at two ends */
+        align-items: center;
+        margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  
+  
+  <div class="header-row">
+    <h2>لیست کاربران تلگرام</h2>
+    <a class="add-button" href="{{ url_for('add_telegram_user') }}">افزودن کاربر جدید</a>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>شناسه</th>
+        <th>شناسه کاربر تلگرام</th>
+        <th>شناسه سازمان</th>
+        <th>عملیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.telegram_user_id }}</td>
+        <td>{{ user.sazman_id }}</td>
+        <td>
+          <a href="{{ url_for('edit_telegram_user', id=user.id) }}">ویرایش</a> |
+          <a href="{{ url_for('delete_telegram_user', id=user.id) }}" onclick="return confirm('آیا مطمئن هستید؟')">حذف</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

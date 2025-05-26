@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>لیست اتصالات صفحات</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css">
+  <style>
+    body {
+      font-family: 'Samim', sans-serif;
+      direction: rtl;
+      padding: 30px;
+      background: #f0f8ff;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .add-button {
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      margin-bottom: 15px;
+      transition: background-color 0.3s ease;
+      float: left; /* align left visually, but keep RTL */
+    }
+    .add-button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      clear: both;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .header-row {
+        display: flex;
+        justify-content: space-between; /* puts items at two ends */
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+  </style>
+</head>
+<body>
+    <div class="header-row">
+        <h2>لیست اتصالات صفحات</h2>
+        <a class="add-button" href="{{ url_for('add_page_connection') }}">افزودن اتصال جدید</a>
+      </div>
+      
+  <table>
+    <thead>
+      <tr>
+        <th>شناسه</th>
+        <th>عنوان</th>
+        <th>صفحه</th>
+        <th>عملیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td>{{ r.id }}</td>
+        <td>{{ r.query_title }}</td>
+        <td>{{ r.page_id }}</td>
+        <td>
+          <a href="{{ url_for('edit_page_connection', id=r.id) }}">ویرایش</a> |
+          <a href="{{ url_for('delete_page_connection', id=r.id) }}" onclick="return confirm('آیا مطمئن هستید؟')">حذف</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

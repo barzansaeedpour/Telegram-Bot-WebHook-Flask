@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>ویرایش کاربر تلگرام</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* use your add form styles here */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>ویرایش کاربر تلگرام</h2>
+    <form method="POST">
+      <label for="telegram_user_id">شناسه کاربر تلگرام:</label>
+      <input id="telegram_user_id" type="text" name="telegram_user_id" value="{{ user.telegram_user_id }}" required>
+
+      <label for="sazman_id">شناسه سازمان:</label>
+      <input id="sazman_id" type="text" name="sazman_id" value="{{ user.sazman_id }}" required>
+
+      <input type="submit" value="ذخیره تغییرات">
+    </form>
+    <a class="back-link" href="{{ url_for('list_telegram_users') }}">بازگشت به لیست کاربران</a>
+  </div>
+</body>
+</html>

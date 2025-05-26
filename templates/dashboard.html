@@ -71,8 +71,9 @@
   <div class="container">
     <h2>خوش آمدید، {{ session.admin }}</h2>
     <ul>
-      <li><a href="{{ url_for('add_telegram_user') }}">افزودن کاربر تلگرام</a></li>
-      <li><a href="{{ url_for('add_page_connection') }}">افزودن اتصال صفحه</a></li>
+      
+      <li><a href="{{ url_for('list_telegram_users') }}">لیست کاربران تلگرام</a></li>
+      <li><a href="{{ url_for('list_page_connections') }}">لیست کوئری ها</a></li>
       <li><a href="{{ url_for('logout') }}">خروج از حساب</a></li>
     </ul>
   </div>
