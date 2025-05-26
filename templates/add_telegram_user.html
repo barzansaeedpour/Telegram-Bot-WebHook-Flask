@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>افزودن کاربر تلگرام</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Samim', sans-serif;
+      direction: rtl;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      max-width: 420px;
+      width: 90%;
+      text-align: right;
+    }
+
+    h2 {
+      margin-bottom: 32px;
+      color: #212529;
+      font-weight: bold;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    label {
+      font-size: 16px;
+      color: #333;
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin-bottom: 24px;
+      transition: border-color 0.3s ease;
+      outline-offset: 2px;
+    }
+
+    input[type="text"]:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    input[type="submit"] {
+      width: 100%;
+      padding: 14px 0;
+      font-size: 17px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 30px;
+      text-align: center;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+      color: #0056b3;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>افزودن کاربر تلگرام</h2>
+    <form method="POST">
+      <label for="telegram_user_id">شناسه کاربر تلگرام:</label>
+      <input id="telegram_user_id" type="text" name="telegram_user_id" required>
+
+      <label for="sazman_id">شناسه سازمان:</label>
+      <input id="sazman_id" type="text" name="sazman_id" required>
+
+      <input type="submit" value="افزودن کاربر">
+    </form>
+    <a class="back-link" href="{{ url_for('dashboard') }}">بازگشت به داشبورد</a>
+  </div>
+</body>
+</html>

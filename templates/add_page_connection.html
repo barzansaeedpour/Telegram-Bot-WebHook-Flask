@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>افزودن اتصال صفحه</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Samim', sans-serif;
+      direction: rtl;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      max-width: 480px;
+      width: 90%;
+      text-align: right;
+    }
+
+    h2 {
+      margin-bottom: 32px;
+      color: #212529;
+      font-weight: bold;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    label {
+      font-size: 16px;
+      color: #333;
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin-bottom: 24px;
+      transition: border-color 0.3s ease;
+      outline-offset: 2px;
+      font-family: 'Samim', sans-serif;
+      resize: vertical;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+    }
+
+    input[type="submit"] {
+      width: 100%;
+      padding: 14px 0;
+      font-size: 17px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 30px;
+      text-align: center;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+      color: #0056b3;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>افزودن گزارش (کوئری)</h2>
+    <form method="POST">
+      <label for="query_title">عنوان کوئری (query_title):</label>
+      <input id="query_title" type="text" name="query_title" placeholder="مثال: جمع کل مانده" required>
+
+      <label for="page_id">شناسه صفحه (page_id):</label>
+      <input id="page_id" type="text" name="page_id" placeholder="مثال: 20228" required>
+
+      <label for="connection_string">رشته اتصال (connection_string):</label>
+      <input id="connection_string" type="text" name="connection_string" 
+        placeholder="مثال:&#10DRIVER={ODBC Driver 17 for SQL Server};SERVER=37.32.11.148;DATABASE=MANDEGAR20;UID=sa;PWD=NsNs7605@@;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
+        required>
+
+      <label for="query">کوئری (query):</label>
+      <textarea id="query" name="query" placeholder="مثال:&#10select sum(r.Value1) - sum(r.Value2) as Total from v_Acc_VouchersRow r where r.fYear=(select max(code) from Pub_fYear) and Cod_1=600" required></textarea>
+
+      <input type="submit" value="افزودن اتصال">
+    </form>
+    <a class="back-link" href="{{ url_for('dashboard') }}">بازگشت به داشبورد</a>
+  </div>
+</body>
+</html>
