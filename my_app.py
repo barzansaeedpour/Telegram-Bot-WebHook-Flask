@@ -207,14 +207,15 @@ def build_category_response(rows):
         for row in rows
     ]
 
+    keyboard.append([InlineKeyboardButton(text="🔙 بازگشت", callback_data="back_to_start")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     return "📂 لطفا یک دسته بندی را انتخاب کنید:", reply_markup
 
 def build_query_response(result_text: str):
     if not result_text:
         result_text = "❌ No results available for this page."
-    
-    return result_text, None
+    keyboard = [[InlineKeyboardButton(text="🔙 بازگشت", callback_data="back_to_pages")]]
+    return result_text, InlineKeyboardMarkup(keyboard)
 
 
 # # 4. Send main keyboard (option 1 / 2)
@@ -231,20 +232,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_id = str(update.effective_user.id)
     sazman_id = is_user_authorized(telegram_id)
 
+    # Detect source of the update: message or callback
+    if update.message:
+        send_func = update.message.reply_text
+    elif update.callback_query:
+        send_func = update.callback_query.message.reply_text
+    else:
+        return
+    
     if sazman_id:
-        # get sazman title from SQL Server
         sazman_title = get_sazman_title_from_sazman_id(sazman_id)
-        await update.message.reply_text(f"✅ دسترسی شما تایید شد. سازمان شما: {sazman_title}")
+        await send_func(f"✅ دسترسی شما تایید شد. سازمان شما: {sazman_title}")
 
         rows = get_categories_by_sazman_id(sazman_id)
-
         if rows is not None:
             text, reply_markup = build_category_response(rows)
-            await update.message.reply_text(text, reply_markup=reply_markup)
+            await send_func(text, reply_markup=reply_markup)
         else:
-            await update.message.reply_text("❌ خطا در گرفتن دسته بندی ها از دیتابیس.")
+            await send_func("❌ خطا در گرفتن دسته بندی ها از دیتابیس.")
     else:
-        await update.message.reply_text(
+        await send_func(
             f"❌ شما اجازه دسترسی به این ربات را ندارید. لطفاً با مدیر تماس بگیرید.\n\n"
             f"آیدی تلگرام جهت تعریف: <code>{telegram_id}</code>",
             parse_mode='HTML'
@@ -328,6 +335,8 @@ def build_page_response(rows):
         [InlineKeyboardButton(text=row.Title, callback_data=f"page_{row.Id}")]
         for row in rows
     ]
+    # Add back button to go to categories
+    keyboard.append([InlineKeyboardButton(text="🔙 بازگشت", callback_data="back_to_categories")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     return "📄 لطفا یک صفحه را انتخاب کنید:", reply_markup
 
@@ -339,7 +348,9 @@ async def handle_category_click(update: Update, context: ContextTypes.DEFAULT_TY
 
     category_id = int(query.data.split("_")[1])
     print(f"➡️ Category ID: {category_id}")
-
+    
+    context.user_data["last_category_id"] = category_id
+    
     pages = get_pages_by_category_id(category_id)
     print(f"Fetched {len(pages)} pages") if pages else print("No pages found")
 
@@ -355,6 +366,8 @@ async def handle_page_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     page_id = int(query.data.split("_")[1])
     print(f"➡️ Page ID: {page_id}")
 
+    context.user_data["last_page_id"] = page_id
+    
     temps = get_query_results_by_page_id(page_id)
     
     # print(f"Fetched {len(queries)} queris") if queries else print("No queries found")
@@ -397,6 +410,39 @@ async def handle_page_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # async def test(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #     logger.info(f"/test from {update.effective_user.username}")
 #     await update.message.reply_text("Hello! This is a test message.")
+
+
+async def handle_back_to_categories(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    telegram_id = str(query.from_user.id)
+    sazman_id = is_user_authorized(telegram_id)
+    rows = get_categories_by_sazman_id(sazman_id)
+
+    text, reply_markup = build_category_response(rows)
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
+
+async def handle_back_to_pages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    # Store category ID in context for reuse
+    category_id = context.user_data.get("last_category_id")
+    if category_id is None:
+        await query.edit_message_text("❌ اطلاعات دسته‌بندی در دسترس نیست.")
+        return
+
+    pages = get_pages_by_category_id(category_id)
+    text, reply_markup = build_page_response(pages)
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
+
+
+async def handle_back_to_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await start(update, context)  # Reuse start logic
+
 
 import os
 from azure.ai.inference import ChatCompletionsClient
@@ -502,7 +548,9 @@ from telegram.ext import CallbackQueryHandler
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(CallbackQueryHandler(handle_category_click, pattern=r'^category_\d+$'))
 bot_app.add_handler(CallbackQueryHandler(handle_page_click, pattern=r'^page_\d+$'))
-
+bot_app.add_handler(CallbackQueryHandler(handle_back_to_categories, pattern='^back_to_categories$'))
+bot_app.add_handler(CallbackQueryHandler(handle_back_to_pages, pattern='^back_to_pages$'))
+bot_app.add_handler(CallbackQueryHandler(handle_back_to_start, pattern='^back_to_start$'))
 
 
 
