@@ -39,6 +39,7 @@ def index():
 if __name__ == "__main__":
     print("Starting server with Waitress on http://127.0.0.1:9000")
     # Set webhook
-    asyncio.run(application.bot.set_webhook(f"{WEBHOOK_URL}/webhook"))
+    # asyncio.run(application.bot.set_webhook(f"{WEBHOOK_URL}/webhook/"))
+    asyncio.run(application.bot.set_webhook(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={WEBHOOK_URL}"))
     # Start Flask app with Waitress
     serve(app, host="0.0.0.0", port=9000)

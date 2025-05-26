@@ -347,10 +347,10 @@ def webhook():
     return "OK", 200
 
 
-# Health check route
 @app.route("/", methods=["GET"])
 def index():
-    return "Bot is running.2", 200
+    return render_template("index.html")
+
 
 
 ####################################### Logging setup #######################################
@@ -369,7 +369,7 @@ def login():
             session['admin'] = user.phone
             return redirect('/dashboard')
         except NoResultFound:
-            return render_template('login.html', error="Invalid credentials")
+            return render_template('login.html', error="اطلاعات ورود اشتباه است.")
     return render_template('login.html')
 
 @app.route('/dashboard')

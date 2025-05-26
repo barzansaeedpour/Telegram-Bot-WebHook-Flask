@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>مدیریت ربات تلگرام زانسا</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Samim', sans-serif;
+      direction: rtl;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 40px 50px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      color: #212529;
+      margin-bottom: 36px;
+      font-weight: 700;
+      font-size: 26px;
+    }
+    .login-btn {
+      background-color: #007bff;
+      color: white;
+      padding: 14px 30px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'Samim', sans-serif;
+      transition: background-color 0.3s ease;
+      width: 100%;
+    }
+    .login-btn:hover {
+      background-color: #0056b3;
+    }
+    a {
+      text-decoration: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>مدیریت ربات تلگرام زانسا</h1>
+    <a href="{{ url_for('login') }}">
+      <button class="login-btn">ورود به پنل مدیریت</button>
+    </a>
+  </div>
+</body>
+</html>

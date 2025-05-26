@@ -1,6 +1,80 @@
-<h2>Dashboard</h2>
-<ul>
-  <li><a href="/add-telegram-user">Add Telegram User</a></li>
-  <li><a href="/add-page-connection">Add Page Connection</a></li>
-</ul>
-<a href="/logout">Logout</a>
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>داشبورد</title>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/Samim/Samim.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Samim', sans-serif;
+      direction: rtl;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 32px;
+      color: #212529;
+      font-weight: bold;
+      font-size: 22px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li + li {
+      margin-top: 20px;
+    }
+
+    a {
+      text-decoration: none;
+      font-size: 17px;
+      color: #007bff;
+      background-color: #f1f1f1;
+      padding: 12px 18px;
+      border: 1px solid #007bff;
+      border-radius: 10px;
+      display: block;
+      transition: all 0.3s ease;
+    }
+
+    a:hover {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>خوش آمدید، {{ session.admin }}</h2>
+    <ul>
+      <li><a href="{{ url_for('add_telegram_user') }}">افزودن کاربر تلگرام</a></li>
+      <li><a href="{{ url_for('add_page_connection') }}">افزودن اتصال صفحه</a></li>
+      <li><a href="{{ url_for('logout') }}">خروج از حساب</a></li>
+    </ul>
+  </div>
+</body>
+</html>
