@@ -267,7 +267,12 @@ async def handle_page_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # print(f"Fetched {len(queries)} queris") if queries else print("No queries found")
     resutlt_text = ""
     for temp in temps:
-        result_text = f"{temp[0]}: {temp[1][0][0]}" if temp[1] else f"{temp[0]}: بدون نتیجه"
+        x = temp[1][0][0]
+        try:
+            x = f"{x:,.2f}"  # keeps 2 decimal places
+        except:
+            pass
+        result_text = f"{temp[0]}: {x}" if temp[1] else f"{temp[0]}: بدون نتیجه"
         resutlt_text += result_text + "\n\n"
     
     # if temps:
